@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #evil ssh; ssh attack tool
 # TO DO
-# remove login history when the "last" command is typed in
+# drop all mysql stuff option
+# deface website option
 
 if [ "$1" = "-h" -o "$1" = "--help" ]; then
 	echo "Usage: $0 [user@host]|[user@host:port] [password] [options]"
@@ -24,7 +25,11 @@ port=22
 if [ $# -gt 0 ]; then
 	firstArg=`echo $1 | /usr/bin/env awk -F":" '{print $1}'`
 	port=`echo $1 | /usr/bin/env awk -F":" '{print $2}'`
-	pass=$2
+	if [ ${#2} -lt 1 ]; then
+		read -p "Enter password: " pass
+	else
+		pass=$2
+	fi
 	user=`echo $firstArg | /usr/bin/env awk -F"@" '{print $1}'`
 else
 	echo "Values can also be given as command line arguments."
