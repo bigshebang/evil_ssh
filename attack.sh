@@ -72,13 +72,13 @@ MORE
 #start certain services
 for service in serviceStart; do
 	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
-	echo "send\"/usr/bin/env service $service start\r\" "
+	echo "send\"/usr/bin/env service $service start\r\" " >> $expectFile
 done
 
 #stop certain services
 for service in serviceStop; do
 	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
-	echo "send\"/usr/bin/env service $service stop\r\" "
+	echo "send\"/usr/bin/env service $service stop\r\" " >> $expectFile
 done
 
 /bin/cat <<BOTTOM >> $expectFile
