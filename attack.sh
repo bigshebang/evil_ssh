@@ -68,11 +68,7 @@ fi
 
 /bin/cat <<LOGIN >> $expectFile
 spawn ssh -p $port $firstArg
-expect {
--re ".*Are.*.*yes.*no.*" {
-send "yes\n"
-exp_continue
-}
+expect yes/no { send yes\r; exp_continue}
 set prompt ":|#|\\\\\\$"
 interact -o -nobuffer -re \$prompt return
 send "$pass\r"
