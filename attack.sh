@@ -122,15 +122,15 @@ if [ ${#port} -lt 1 ]; then #if no port given, make default 22
 		port=22
 fi
 
-echo "here are your values!"
-echo "newUser: '$newUser'"
-echo "newUserID: '$newUserID'"
-echo "newPass: '$newPass'"
-echo "newRootPass: '$newRootPass'"
-echo "port: '$port'"
-echo "buildOnly: '$buildOnly'"
+# echo "here are your values!"
+# echo "newUser: '$newUser'"
+# echo "newUserID: '$newUserID'"
+# echo "newPass: '$newPass'"
+# echo "newRootPass: '$newRootPass'"
+# echo "port: '$port'"
+# echo "buildOnly: '$buildOnly'"
 
-exit 0
+# exit 0
 
 echo "#!/usr/bin/expect" > $expectFile #write shebang to file
 
