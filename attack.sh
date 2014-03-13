@@ -133,18 +133,6 @@ if [ ${#port} -lt 1 ]; then #if no port given, make default 22
 		port=22
 fi
 
-echo "here are your values!"
-echo "newUser: '$newUser'"
-echo "newUserID: '$newUserID'"
-echo "newPass: '$newPass'"
-echo "newRootPass: '$newRootPass'"
-echo "port: '$port'"
-echo "serviceStart: '$serviceStart'"
-echo "serviceStop: '$serviceStop'"
-echo "buildOnly: '$buildOnly'"
-
-exit 0
-
 echo "#!/usr/bin/expect" > $expectFile #write shebang to file
 
 if [ "$alterLastHistory" == "yes" ]; then #if want to alter last history to cover tracks of logging in, write this to file
@@ -245,7 +233,7 @@ BOTTOM
 
 echo "Attempting login..."
 if [ "$buildOnly" != "no" ]; then
-	# /usr/bin/expect myfile.exp
+	/usr/bin/expect myfile.exp
 fi
 echo "Completed."
 
