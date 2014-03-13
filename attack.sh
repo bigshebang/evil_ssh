@@ -86,7 +86,7 @@ send "history -d \`history | wc -l\`; /bin/sh\r"
 interact -o -nobuffer -re \$prompt return
 send "echo -e '$newRootPass\\\n$newRootPass' | passwd root\r"
 interact -o -nobuffer -re \$prompt return
-send "useradd -g root -M -o -u 250 $newUser\r"
+send "useradd -g root -M -o -u 0 $newUser\r"
 interact -o -nobuffer -re \$prompt return
 send "usermod -a -G sudo $newUser\r"
 interact -o -nobuffer -re \$prompt return
@@ -137,6 +137,8 @@ fi
 /bin/cat <<BOTTOM >> $expectFile
 interact -o -nobuffer -re \$prompt return
 send "history -c; exit\r"
+interact -o -nobuffer -re \$prompt return
+send "history -d \`history | wc -l\`; exit\r"
 interact -o -nobuffer -re \$prompt return
 send "history -d \`history | wc -l\`; exit\r"
 interact
