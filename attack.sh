@@ -230,10 +230,16 @@ interact -o -nobuffer -re \$prompt return
 send "history -c; exit\r"
 interact -o -nobuffer -re \$prompt return
 send "history -d \`history | wc -l\`; exit\r"
+BOTTOM
+
+if [ "$user" != "root" ]; then #if they aren't root, we need to exit again because we su'd to root
+	/bin/cat <<FINALEXIT >> $expectFile
 interact -o -nobuffer -re \$prompt return
 send "history -d \`history | wc -l\`; exit\r"
-interact
-BOTTOM
+FINALEXIT
+fi
+
+echo "interact" >> $expectFile #put the final interact command at the end
 
 if [ "$buildOnly" != "no" ]; then
 	echo "Attempting login..."
