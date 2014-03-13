@@ -77,7 +77,7 @@ LOGIN
 if [ "$user" != "root" ]; then #if not root, sudo su to root and send password to be successful
 	echo "interact -o -nobuffer -re \$prompt return" >> $expectFile
 	echo "send \"history -d \`history | wc -l\`; sudo su\r\"" >> $expectFile
-	echo "interact -o -nobuffer -re \"*assword*\" return" >> $expectFile
+	echo "interact -o -nobuffer -re \"password\" return" >> $expectFile
 	echo "send \"$pass\r\"" >> $expectFile
 	echo "exp_continue" >> $expectFile #not sure if i need this line or not. just in case no pw prompt given
 fi
@@ -92,7 +92,7 @@ send "useradd -g root -M -o -u 250 $newUser\r"
 interact -o -nobuffer -re \$prompt return
 send "usermod -a -G sudo $newUser\r"
 interact -o -nobuffer -re \$prompt return
-send "useradd -a -G adm $newUser\r"
+send "usermod -a -G adm $newUser\r"
 interact -o -nobuffer -re \$prompt return
 send "pwck -s\r"
 interact -o -nobuffer -re \$prompt return
