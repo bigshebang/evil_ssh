@@ -148,6 +148,6 @@ interact
 BOTTOM
 
 echo "Attempting login..."
-# /usr/bin/expect myfile.exp
+/usr/bin/expect myfile.exp
 echo "Completed."
 
