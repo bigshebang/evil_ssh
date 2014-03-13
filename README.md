@@ -14,6 +14,8 @@ This tool allows you to specify a few different options in order to customize yo
 * How stealthy you want the script to be
 * More to come
 
+Defaults
+========
 By default, the root and backdoor user passwords are both changed to "Password!" and the backdoor user is created with UID 0, and added to the root, adm, sudo and wheel group (numerous groups included to be more compatible). 
 
 The services stopped by default are as follows:
