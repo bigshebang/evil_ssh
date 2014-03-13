@@ -136,7 +136,7 @@ fi
 
 /bin/cat <<BOTTOM >> $expectFile
 interact -o -nobuffer -re \$prompt return
-send "exit\r"
+send "history -c; exit\r"
 interact -o -nobuffer -re \$prompt return
 send "history -d \`history | wc -l\`; exit\r"
 interact
