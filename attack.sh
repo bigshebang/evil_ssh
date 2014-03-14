@@ -243,6 +243,6 @@ echo "interact" >> $expectFile #put the final interact command at the end
 
 if [ "$buildOnly" == "no" ]; then
 	echo "Attempting login..."
-	/usr/bin/expect myfile.exp
+	/usr/bin/expect $expectFile
 	echo "Completed."
 fi
